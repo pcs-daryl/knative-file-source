@@ -4,12 +4,21 @@ import pandas as pd
 import pika
 import json
 import time
+import logging
+import sys
 from dotenv import load_dotenv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 # Load environment variables from a .env file
 load_dotenv()
+
+logger = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)  # Write to stdout
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 class CsvPublisher:
     def __init__(self, amqp_url, exchange, routing_key, output_directory, chunk_size=100):
@@ -35,7 +44,7 @@ class CsvPublisher:
                 routing_key=self.routing_key,
                 body=json.dumps(message)
             )
-        print(f"Published {len(messages)} messages.")
+        logger.info(f"Published {len(messages)} messages.")
 
     def move_to_output(self, file_path):
         """Move the processed CSV file to the output directory."""
@@ -44,11 +53,11 @@ class CsvPublisher:
                 os.makedirs(self.output_directory)
             
             destination_path = os.path.join(self.output_directory, os.path.basename(file_path))
-            print(f"Moving file from {file_path} to {destination_path}")
+            logger.info(f"Moving file from {file_path} to {destination_path}")
             shutil.move(file_path, destination_path)
-            print(f"Successfully moved {file_path} to {destination_path}")
+            logger.info(f"Successfully moved {file_path} to {destination_path}")
         except Exception as e:
-            print(f"Failed to move file {file_path}: {e}")
+            logger.info(f"Failed to move file {file_path}: {e}")
 
     def process_file(self, file_path):
         """Process the CSV file and publish messages."""
@@ -68,7 +77,7 @@ class CsvPublisher:
             self.move_to_output(file_path)
 
         except Exception as e:
-            print(f"Failed to process file {file_path}: {e}")
+            logger.info(f"Failed to process file {file_path}: {e}")
 
 # Directory Watcher
 class DirectoryWatcher(FileSystemEventHandler):
@@ -80,7 +89,7 @@ class DirectoryWatcher(FileSystemEventHandler):
         if event.is_directory:
             return
         if event.src_path.endswith(".csv"):
-            print(f"New file detected: {event.src_path}")
+            logger.info(f"New file detected: {event.src_path}")
             self.publisher.process_file(event.src_path)
 
 def watch_directory(directory, publisher):
@@ -89,7 +98,7 @@ def watch_directory(directory, publisher):
     observer = Observer()
     observer.schedule(event_handler, directory, recursive=False)
     observer.start()
-    print(f"Watching directory {directory} for new CSV files...")
+    logger.info(f"Watching directory {directory} for new CSV files...")
     try:
         while True:
             time.sleep(1)  # Keep watching the directory
