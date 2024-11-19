@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-data-pv
+  labels: 
+    purpose: test-data
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /test-data

@@ -94,6 +94,12 @@ class DirectoryWatcher(FileSystemEventHandler):
 
 def watch_directory(directory, publisher):
     """Watch the directory for new files and process them."""
+    # Ensure the directory exists
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        logger.info(f"Directory {directory} created.")
+
+    # Initialize the event handler and observer
     event_handler = DirectoryWatcher(publisher)
     observer = Observer()
     observer.schedule(event_handler, directory, recursive=False)
