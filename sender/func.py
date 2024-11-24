@@ -18,10 +18,10 @@ handler = logging.StreamHandler(sys.stdout)  # Write to stdout
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class CsvPublisher:
-    def __init__(self, amqp_url, exchange, routing_key, output_directory, chunk_size=100):
+    def __init__(self, amqp_url, exchange, routing_key, output_directory, chunk_size=1000):
         self.amqp_url = amqp_url
         self.exchange = exchange
         self.routing_key = routing_key
